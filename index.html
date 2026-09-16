@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aadhar PAN Mask Check</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 420px;
+            box-sizing: border-box;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+            font-size: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .loading {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #555;
+            display: none;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+            display: none;
+            font-family: monospace;
+            font-size: 15px;
+            line-height: 1.8;
+            word-break: break-word;
+        }
+        .success-text { color: #28a745; font-weight: bold; }
+        .error-text { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>AADHAR PAN MASK CHECK</h2>
+    <input type="text" id="uidInput" placeholder="Enter 12-digit number" maxlength="12">
+    <button onclick="checkStatus()">Check Status</button>
+    
+    <div id="loading" class="loading">Checking status...</div>
+    
+    <div class="result-box" id="resultBox">
+        UID NO - <span id="uidDisplay"></span><br>
+        MASK PAN - <span id="panDisplay"></span>
+    </div>
+</div>
+
+<script>
+    async function checkStatus() {
+        const uid = document.getElementById('uidInput').value.trim();
+        const resultBox = document.getElementById('resultBox');
+        const uidDisplay = document.getElementById('uidDisplay');
+        const panDisplay = document.getElementById('panDisplay');
+        const loading = document.getElementById('loading');
+
+        // Basic check
+        if (uid.length !== 12 || isNaN(uid)) {
+            alert("Kripya valid 12-digit number enter karein.");
+            return;
+        }
+
+        // Reset display
+        resultBox.style.display = 'none';
+        loading.style.display = 'block';
+        panDisplay.className = '';
+
+        // Anti-caching timestamp (har baar naya data aayega)
+        const ts = new Date().getTime();
+        const targetUrl = `https://anon-pan-info.vercel.app/aadhar?key=temppanx2408&id=${uid}&_t=${ts}`;
+        
+        // GitHub Pages ke liye sabse reliable proxy (AllOrigins get API)
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+
+        try {
+            const res = await fetch(proxyUrl);
+            const proxyData = await res.json();
+            
+            loading.style.display = 'none';
+            uidDisplay.innerText = uid;
+
+            if (proxyData.contents) {
+                // AllOrigins se mile text ko JSON me convert karna
+                const json = JSON.parse(proxyData.contents);
+                console.log("GitHub Response:", json); // Debugging ke liye
+
+                const resRoot = json.response || json;
+                const dataArr = resRoot.data || [];
+                const firstEntry = dataArr[0] || {};
+                const isSuccess = resRoot.parameters ? resRoot.parameters.success : resRoot.success;
+
+                // Status check karna aur screen par dikhana
+                if (firstEntry.masked_pan) {
+                    panDisplay.innerText = firstEntry.masked_pan;
+                    panDisplay.className = 'success-text';
+                } else if (firstEntry.message) {
+                    panDisplay.innerText = firstEntry.message;
+                    panDisplay.className = 'error-text';
+                } else if (isSuccess === false) {
+                    panDisplay.innerText = "PAN Not Found or Not Linked";
+                    panDisplay.className = 'error-text';
+                } else {
+                    panDisplay.innerText = "Data missing in response";
+                    panDisplay.className = 'error-text';
+                }
+                
+                resultBox.style.display = 'block';
+            } else {
+                throw new Error("Proxy response invalid");
+            }
+
+        } catch (error) {
+            console.error("API Error:", error);
+            loading.style.display = 'none';
+            uidDisplay.innerText = uid;
+            panDisplay.innerText = "Network Error - API blocked ya Server down hai";
+            panDisplay.className = 'error-text';
+            resultBox.style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>
