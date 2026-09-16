@@ -3,166 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aadhar PAN Mask Check</title>
+    <title>UID Status · Masked PAN</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            margin: 0;
+            background: linear-gradient(145deg, #0b1120 0%, #1a2332 100%);
+            display: flex; align-items: center; justify-content: center; padding: 1.5rem;
         }
-        .container {
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 420px;
-            box-sizing: border-box;
+        .card {
+            background: rgba(18, 28, 40, 0.9);
+            backdrop-filter: blur(12px);
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 255, 255, 0.1);
+            width: 100%; max-width: 680px; padding: 2.5rem 2.2rem;
+            border: 1px solid rgba(0, 255, 255, 0.2);
         }
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-top: 0;
-            font-size: 20px;
+        h1 { display: flex; align-items: center; gap: 0.8rem; font-weight: 600; font-size: 2rem; color: #e0f2fe; margin-bottom: 0.5rem; }
+        h1 i { color: #2dd4bf; font-size: 2rem; filter: drop-shadow(0 0 8px rgba(45, 212, 191, 0.6)); }
+        .subhead { color: #94a3b8; font-size: 1rem; margin-bottom: 2.2rem; border-left: 4px solid #2dd4bf; padding-left: 1.2rem; }
+        .input-group { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+        .input-wrapper { flex: 1; min-width: 240px; position: relative; }
+        .input-wrapper i { position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); color: #2dd4bf; font-size: 1.2rem; opacity: 0.8; pointer-events: none; }
+        input {
+            width: 100%; padding: 1.2rem 1.2rem 1.2rem 3.2rem; background: #0f172a;
+            border: 1.5px solid #1e293b; border-radius: 2rem; font-size: 1.2rem;
+            font-weight: 500; color: #f1f5f9; outline: none; letter-spacing: 0.5px;
         }
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            margin: 15px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-size: 16px;
+        input:focus { border-color: #2dd4bf; box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.2); }
+        input::placeholder { color: #475569; }
+        .progress-bar { height: 4px; background: #1e293b; border-radius: 2px; overflow: hidden; margin-bottom: 1.5rem; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #0d9488, #2dd4bf); width: 0%; transition: width 0.2s; }
+        .result-container {
+            background: #0b1622; border-radius: 2rem; padding: 1.8rem;
+            border: 1px solid #1e2a3a; min-height: 180px; word-break: break-word;
         }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s;
+        .status-header {
+            display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1.5rem;
+            color: #cbd5e1; font-weight: 500; font-size: 1.1rem;
+            border-bottom: 1px dashed #1e2a3a; padding-bottom: 0.8rem;
         }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .loading {
-            text-align: center;
-            margin-top: 15px;
-            font-weight: bold;
-            color: #555;
-            display: none;
-        }
-        .result-box {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-left: 4px solid #007bff;
-            border-radius: 4px;
-            display: none;
-            font-family: monospace;
-            font-size: 15px;
-            line-height: 1.8;
+        .data-row { display: flex; flex-direction: column; gap: 1rem; }
+        .field { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.6rem 1.2rem; }
+        .field .label { min-width: 150px; color: #94a3b8; font-size: 0.95rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .field .value {
+            font-size: 1.3rem; font-weight: 600; color: #f0f9ff;
+            background: #0f1a27; padding: 0.3rem 1.2rem; border-radius: 3rem;
+            border: 1px solid #253544; flex: 1; letter-spacing: 0.5px;
             word-break: break-word;
         }
-        .success-text { color: #28a745; font-weight: bold; }
-        .error-text { color: #dc3545; font-weight: bold; }
+        .value.masked-pan {
+            font-family: 'Courier New', monospace; background: #0b1f1c;
+            border-color: #2dd4bf; color: #a7f3d0; letter-spacing: 1.5px;
+        }
+        .badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1.2rem; border-radius: 2rem; font-size: 0.9rem; font-weight: 600; }
+        .badge.linked { background: #064e3b; color: #a7f3d0; border: 1px solid #2dd4bf; }
+        .badge.not-linked { background: #4c1d1d; color: #fecaca; border: 1px solid #ef4444; }
+        .error-message {
+            background: #2a1215; border-left: 6px solid #ef4444; color: #fecaca;
+            padding: 1rem 1.2rem; border-radius: 1rem; display: flex;
+            align-items: center; gap: 0.8rem; font-weight: 500;
+        }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 2rem 1rem; color: #52637a; text-align: center; }
+        .empty-state i { font-size: 2.8rem; opacity: 0.5; }
+        .spinner {
+            display: inline-block; width: 1.4rem; height: 1.4rem;
+            border: 3px solid rgba(45, 212, 191, 0.2); border-top-color: #2dd4bf;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-timer { font-size: 0.85rem; color: #2dd4bf; margin-top: 0.3rem; font-weight: 600; }
+        .footer-note {
+            margin-top: 1.5rem; font-size: 0.8rem; color: #3b4a5e;
+            display: flex; justify-content: space-between; align-items: center;
+            border-top: 1px solid #1b2533; padding-top: 1rem;
+        }
+        .footer-note i { color: #2dd4bf; margin-right: 0.3rem; }
+        @media (max-width: 540px) {
+            .card { padding: 1.8rem 1.4rem; border-radius: 2rem; }
+            h1 { font-size: 1.7rem; }
+            .field .label { min-width: 100%; }
+            .field .value { font-size: 1.1rem; width: 100%; }
+        }
     </style>
 </head>
 <body>
+    <div class="card">
+        <h1><i class="fas fa-id-card"></i> UID → Masked PAN</h1>
+        <div class="subhead"><i class="fas fa-bolt" style="margin-right: 0.6rem; color: #2dd4bf;"></i> 12 digit complete karte hi auto-fetch</div>
 
-<div class="container">
-    <h2>AADHAR PAN MASK CHECK</h2>
-    <input type="text" id="uidInput" placeholder="Enter 12-digit number" maxlength="12">
-    <button onclick="checkStatus()">Check Status</button>
-    
-    <div id="loading" class="loading">Checking status...</div>
-    
-    <div class="result-box" id="resultBox">
-        UID NO - <span id="uidDisplay"></span><br>
-        MASK PAN - <span id="panDisplay"></span>
+        <div class="input-group">
+            <div class="input-wrapper">
+                <i class="fas fa-fingerprint"></i>
+                <input type="text" id="uidInput" placeholder="Enter 12-digit UID" maxlength="12" inputmode="numeric" autocomplete="off">
+            </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+        <div id="resultContainer" class="result-container">
+            <div class="empty-state">
+                <i class="fas fa-keyboard"></i>
+                <span>Start typing UID — auto fetch at 12 digits</span>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            <span><i class="fas fa-code"></i> API: anon-pan-info</span>
+            <span><i class="fas fa-user-secret"></i> mr_anonymous_404</span>
+        </div>
     </div>
-</div>
 
-<script>
-    async function checkStatus() {
-        const uid = document.getElementById('uidInput').value.trim();
-        const resultBox = document.getElementById('resultBox');
-        const uidDisplay = document.getElementById('uidDisplay');
-        const panDisplay = document.getElementById('panDisplay');
-        const loading = document.getElementById('loading');
-
-        // Basic check
-        if (uid.length !== 12 || isNaN(uid)) {
-            alert("Kripya valid 12-digit number enter karein.");
-            return;
-        }
-
-        // Reset display
-        resultBox.style.display = 'none';
-        loading.style.display = 'block';
-        panDisplay.className = '';
-
-        // Anti-caching timestamp (har baar naya data aayega)
-        const ts = new Date().getTime();
-        const targetUrl = `https://anon-pan-info.vercel.app/aadhar?key=temppanx2408&id=${uid}&_t=${ts}`;
-        
-        // GitHub Pages ke liye sabse reliable proxy (AllOrigins get API)
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-
-        try {
-            const res = await fetch(proxyUrl);
-            const proxyData = await res.json();
-            
-            loading.style.display = 'none';
-            uidDisplay.innerText = uid;
-
-            if (proxyData.contents) {
-                // AllOrigins se mile text ko JSON me convert karna
-                const json = JSON.parse(proxyData.contents);
-                console.log("GitHub Response:", json); // Debugging ke liye
-
-                const resRoot = json.response || json;
-                const dataArr = resRoot.data || [];
-                const firstEntry = dataArr[0] || {};
-                const isSuccess = resRoot.parameters ? resRoot.parameters.success : resRoot.success;
-
-                // Status check karna aur screen par dikhana
-                if (firstEntry.masked_pan) {
-                    panDisplay.innerText = firstEntry.masked_pan;
-                    panDisplay.className = 'success-text';
-                } else if (firstEntry.message) {
-                    panDisplay.innerText = firstEntry.message;
-                    panDisplay.className = 'error-text';
-                } else if (isSuccess === false) {
-                    panDisplay.innerText = "PAN Not Found or Not Linked";
-                    panDisplay.className = 'error-text';
-                } else {
-                    panDisplay.innerText = "Data missing in response";
-                    panDisplay.className = 'error-text';
-                }
-                
-                resultBox.style.display = 'block';
-            } else {
-                throw new Error("Proxy response invalid");
-            }
-
-        } catch (error) {
-            console.error("API Error:", error);
-            loading.style.display = 'none';
-            uidDisplay.innerText = uid;
-            panDisplay.innerText = "Network Error - API blocked ya Server down hai";
-            panDisplay.className = 'error-text';
-            resultBox.style.display = 'block';
-        }
-    }
-</script>
-
+    <!-- ✅ API.JS FILE LINK -->
+    <script src="api.js"></script>
 </body>
 </html>
